@@ -30,24 +30,25 @@
   printf(fmt, ##__VA_ARGS__);                                                  \
   printf("\n")
 
+class CameraInfo {
+public:
+  CameraInfo() {}
+  ~CameraInfo() {}
+
+  std::string name;
+  uint32_t width;
+  uint32_t height;
+};
+
 class CameraFrame {
 public:
   CameraFrame() {}
   ~CameraFrame() {}
 
-  enum PixelFormat {
-    PIXEL_FORMAT_INVALID = 0,
-    PIXEL_FORMAT_YUV420,
-    PIXEL_FORMAT_YUV422,
-    PIXEL_FORMAT_UYVY,
-    PIXEL_FORMAT_RGB24,
-    PIXEL_FORMAT_RGB32
-  };
-
   uint32_t width;
   uint32_t height;
   uint32_t stride;
-  PixelFormat pixFmt;
+  uint32_t pixFmt;
   void *buf;
   size_t bufSize;
 };
@@ -64,55 +65,36 @@ public:
     STATE_RUN = 2,
   };
 
+  enum Mode {
+    MODE_STILL = 0,
+    MODE_VIDEO = 1,
+  };
+
+  enum PixelFormat {
+    PIXEL_FORMAT_INVALID = 0,
+    PIXEL_FORMAT_YUV420,
+    PIXEL_FORMAT_YUV422,
+    PIXEL_FORMAT_UYVY,
+    PIXEL_FORMAT_RGB24,
+    PIXEL_FORMAT_RGB32
+  };
+
   virtual std::string getDeviceId() = 0;
-  // virtual int getInfo(struct CameraInfo &camInfo) = 0;
   virtual int getInfo() = 0;
-  virtual bool isGstV4l2Src() = 0;
-  // virtual int init(CameraParameters &camParam) = 0;
+  virtual std::string getGstSrc() = 0;
   virtual int init() = 0;
   virtual int uninit() = 0;
-  virtual int start() { return -ENOTSUP; }
-  // virtual int start(std::function<void(std::vector<uint8_t>)> cb) { return
-  // -ENOTSUP; }
-  virtual int start(std::function<void(void *, size_t)> cb) { return -ENOTSUP; }
-  virtual int stop() { return -ENOTSUP; }
-  virtual std::vector<uint8_t> read() { return {}; }
-  virtual int resetParams() { return -ENOTSUP; }
-  virtual int setParam(const char *param_id, size_t id_size,
-                       const char *param_value, size_t value_size,
-                       int param_type) {
-    return -ENOTSUP;
-  }
-  virtual int setParam(std::string param_id, float param_value) {
-    return -ENOTSUP;
-  }
-  virtual int setParam(std::string param_id, int32_t param_value) {
-    return -ENOTSUP;
-  }
-  virtual int setParam(std::string param_id, uint32_t param_value) {
-    return -ENOTSUP;
-  }
-  virtual int setParam(std::string param_id, uint8_t param_value) {
-    return -ENOTSUP;
-  }
-  virtual int setSize(uint32_t width, uint32_t height) { return -ENOTSUP; }
+  virtual int start() = 0;
+  virtual int stop() = 0;
+  virtual int read(CameraFrame &frame) = 0;
+  virtual int setSize(uint32_t &width, uint32_t &height) { return -ENOTSUP; }
   virtual int getSize(uint32_t &width, uint32_t &height) { return -ENOTSUP; }
-  virtual int setPixelFormat(uint32_t format) { return -ENOTSUP; }
-  virtual int getPixelFormat(uint32_t &format) { return -ENOTSUP; }
-  virtual int setMode(uint32_t mode) { return -ENOTSUP; }
-  virtual int getMode() { return -ENOTSUP; };
-  virtual int setBrightness(uint32_t value) { return -ENOTSUP; }
-  virtual int setContrast(uint32_t value) { return -ENOTSUP; }
-  virtual int setSaturation(uint32_t value) { return -ENOTSUP; }
-  virtual int setWhiteBalanceMode(uint32_t value) { return -ENOTSUP; }
-  virtual int setGamma(uint32_t value) { return -ENOTSUP; }
-  virtual int setGain(uint32_t value) { return -ENOTSUP; }
-  virtual int setPowerLineFrequency(uint32_t value) { return -ENOTSUP; }
-  virtual int setWhiteBalanceTemperature(uint32_t value) { return -ENOTSUP; }
-  virtual int setSharpness(uint32_t value) { return -ENOTSUP; }
-  virtual int setBacklightCompensation(uint32_t value) { return -ENOTSUP; }
-  virtual int setExposureMode(uint32_t value) { return -ENOTSUP; }
-  virtual int setExposureAbsolute(uint32_t value) { return -ENOTSUP; }
-  virtual int setSceneMode(uint32_t value) { return -ENOTSUP; }
-  virtual int setHue(int32_t value) { return -ENOTSUP; }
+  virtual int setPixelFormat(CameraDevice::PixelFormat format) {
+    return -ENOTSUP;
+  }
+  virtual int getPixelFormat(CameraDevice::PixelFormat &format) {
+    return -ENOTSUP;
+  }
+  virtual int setMode(CameraDevice::Mode mode) { return -ENOTSUP; }
+  virtual int getMode(CameraDevice::Mode &mode) { return -ENOTSUP; }
 };

@@ -1,83 +1,145 @@
 // ROS node for Aero camera
 
-#include "aero_camera_node.h"
-#include "CameraDeviceAtomIsp.h"
-#include <algorithm>
+#define TEST 0
 
-AeroCameraNode::AeroCameraNode() {
-  // Establish this program as a ROS node.
-  nh = ros::NodeHandle("~");
+#include <algorithm>
+#include <image_transport/image_transport.h>
+#include <ros/ros.h>
+#include <sensor_msgs/Image.h>
+#include <sensor_msgs/fill_image.h>
+
+#include "CameraDevice.h"
+#include "CameraDeviceAtomIsp.h"
+
+class AeroCameraNode {
+public:
+  AeroCameraNode(ros::NodeHandle h);
+  ~AeroCameraNode();
+  bool spin();
+
+private:
+  ros::NodeHandle mNH;
+  image_transport::CameraPublisher mImgPub;
+  sensor_msgs::Image mImgMsg;
+  CameraDevice *mCamDev;
+  int start();
+  int stop();
+  int pubData();
+  int readData(sensor_msgs::Image &image);
+};
+
+AeroCameraNode::AeroCameraNode(ros::NodeHandle nh) : mNH(nh) {
+
+  mNH = ros::NodeHandle("~");
+
+  // advertise the main image topic
+  image_transport::ImageTransport it(mNH);
+  mImgPub = it.advertiseCamera("image_raw", 1);
 
   ROS_INFO_STREAM("ROS Node aero_camera");
 
-  // Create publisher for bottom camera
-  mPubCamBottomImage =
-      nh.advertise<sensor_msgs::Image>("/camera/bottom/image_raw", 1);
-
-#if TEST
-  // Subscribe to already available topic
-  mSubRawImage = nh.subscribe("/cam0/image_raw", 1,
-                              &AeroCameraNode::rawImageCallback, this);
-#endif
-
   mCamDev = new CameraDeviceAtomIsp("/dev/video2");
-
-  mCamDev->init();
-
-  // mCamDev->start(std::bind(&AeroCameraNode::cameraFrameCallback,
-  // this,std::placeholders::_1));
-  mCamDev->start(std::bind(&AeroCameraNode::cameraFrameCallback2, this,
-                           std::placeholders::_1, std::placeholders::_2));
 }
 
 AeroCameraNode::~AeroCameraNode() {
   ROS_INFO_STREAM("~AeroCameraNode");
 
-  mCamDev->stop();
+  stop();
 
-  mCamDev->uninit();
+  delete mCamDev;
 }
 
-void AeroCameraNode::cameraFrameCallback2(void *frame, size_t frameLen) {
-  ROS_INFO_STREAM("cameraFrameCallback2");
-  sensor_msgs::Image image;
+int AeroCameraNode::start() {
+  ROS_INFO_STREAM("start");
+  int ret = 0;
 
-  // Form a sensor_msgs::Image with the camera frame
-  sensor_msgs::fillImage(image, "yuv422", 480, 640, 640 * 2, frame);
+  ret = mCamDev->init();
+  if (ret) {
+    ROS_ERROR("Error in init camera");
+    return ret;
+  }
 
-  // Publish it in the topic
-  mPubCamBottomImage.publish(image);
-  sensor_msgs::clearImage(image);
+  ret = mCamDev->start();
+  if (ret) {
+    ROS_ERROR("Error in start camera");
+    mCamDev->uninit();
+    return ret;
+  }
+
+  return ret;
 }
 
-void AeroCameraNode::cameraFrameCallback(std::vector<uint8_t> frame) {
-  ROS_INFO_STREAM("cameraFrameCallback");
-  sensor_msgs::Image image;
-  std::string encoding;
-  uint32_t height, width, stride;
+int AeroCameraNode::stop() {
+  ROS_INFO_STREAM("stop");
+  int ret = 0;
 
-  // Form a sensor_msgs::Image with the camera frame
-  sensor_msgs::fillImage(image, "yuv422", 480, 640, 640 * 2, &frame[0]);
-
-  // Publish it in the topic
-  mPubCamBottomImage.publish(image);
+  ret = mCamDev->stop();
+  ret = mCamDev->uninit();
+  return ret;
 }
 
-#if TEST
-void AeroCameraNode::rawImageCallback(
-    const sensor_msgs::ImageConstPtr &imgMsg) {
-  // publish it in new topic
-  ROS_INFO_STREAM("rawImageCallback");
-  mPubCamBottomImage.publish(imgMsg);
+int AeroCameraNode::readData(sensor_msgs::Image &image) {
+
+  int ret = 0;
+  CameraFrame frame;
+  ret = mCamDev->read(frame);
+  if (!ret) {
+    // Form a sensor_msgs::Image with the camera frame
+    sensor_msgs::fillImage(image, "yuv422", 480, 640, 640 * 2, frame.buf);
+  } else
+    ROS_ERROR("Error in reading camera frame");
+
+  return ret;
 }
-#endif
+
+int AeroCameraNode::pubData() {
+  // ROS_INFO_STREAM("pubData");
+  int ret = 0;
+
+  // read
+  ret = readData(mImgMsg);
+  if (ret) {
+    return ret;
+  }
+
+  // grab the camera info
+  sensor_msgs::CameraInfo ci;
+
+  // publish the image
+  mImgPub.publish(mImgMsg, ci);
+  return ret;
+}
+
+bool AeroCameraNode::spin() {
+  while (!ros::isShuttingDown()) // Using ros::isShuttingDown to avoid
+                                 // restarting the node during a shutdown.
+  {
+    if (start() == 0) {
+      while (mNH.ok()) {
+        if (pubData() < 0)
+          ROS_WARN("No Camera Frame.");
+        ros::spinOnce();
+      }
+    } else {
+      // retry start
+      usleep(1000000);
+      ros::spinOnce();
+    }
+  }
+
+  stop();
+
+  return true;
+}
 
 int main(int argc, char **argv) {
   // Initialize the ROS system
   ros::init(argc, argv, "aero_camera");
-  AeroCameraNode aeroCameraNode;
-  ros::Duration(2).sleep();
-  ros::spin();
+
+  // Establish this program as a ROS node.
+  ros::NodeHandle nh;
+  AeroCameraNode acn(nh);
+  acn.spin();
 
   return 0;
 }
