@@ -33,8 +33,6 @@
 *********************************************************************/
 
 
-#define TEST 0
-
 #include <algorithm>
 #include <image_transport/image_transport.h>
 #include <ros/ros.h>
@@ -62,8 +60,6 @@ private:
 };
 
 AeroCameraNode::AeroCameraNode(ros::NodeHandle nh) : mNH(nh) {
-
-  mNH = ros::NodeHandle("~");
 
   // advertise the main image topic
   image_transport::ImageTransport it(mNH);
@@ -135,7 +131,7 @@ int AeroCameraNode::pubData() {
     return ret;
   }
 
-  // grab the camera info
+  // TODO :: grab the camera info
   sensor_msgs::CameraInfo ci;
 
   // publish the image
@@ -144,8 +140,7 @@ int AeroCameraNode::pubData() {
 }
 
 bool AeroCameraNode::spin() {
-  while (!ros::isShuttingDown()) // Using ros::isShuttingDown to avoid
-                                 // restarting the node during a shutdown.
+  while (!ros::isShuttingDown())
   {
     if (start() == 0) {
       while (mNH.ok()) {
