@@ -372,7 +372,7 @@ int CameraDeviceAtomIsp::pollCamera(int fd) {
 
     if (0 == r) {
       log_error("select timeout");
-      v4l2_streamoff(mFd);
+      stop();
       uninit();
       init();
       start();
