@@ -144,6 +144,8 @@ int AeroCameraNode::pubData() {
   // TODO :: grab the camera info
   sensor_msgs::CameraInfo ci;
 
+  mImgMsg.header.stamp = ros::Time::now();
+
   // publish the image
   mImgPub.publish(mImgMsg, ci);
   return ret;
