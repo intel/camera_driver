@@ -88,6 +88,12 @@ int AeroCameraNode::start() {
     return ret;
   }
 
+  ret = mCamDev->setPixelFormat(CameraDevice::PIXEL_FORMAT_GREY);
+  if (ret) {
+    ROS_ERROR("Error in setting pixel format");
+    return ret;
+  }
+
   ret = mCamDev->start();
   if (ret) {
     ROS_ERROR("Error in start camera");
@@ -114,7 +120,11 @@ int AeroCameraNode::readData(sensor_msgs::Image &image) {
   ret = mCamDev->read(frame);
   if (!ret) {
     // Form a sensor_msgs::Image with the camera frame
-    sensor_msgs::fillImage(image, "yuv422", 480, 640, 640 * 2, frame.buf);
+    if (frame.pixFmt == CameraDevice::PIXEL_FORMAT_GREY)
+      sensor_msgs::fillImage(image, "mono8", frame.height, frame.width,
+                             frame.width, frame.buf);
+    else
+      ROS_ERROR("Unhandled Pixel Format");
   } else
     ROS_ERROR("Error in reading camera frame");
 

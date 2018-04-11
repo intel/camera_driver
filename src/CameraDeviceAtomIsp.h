@@ -53,6 +53,7 @@ public:
   int stop();
   int read(CameraFrame &frame);
   int getSize(uint32_t &width, uint32_t &height);
+  int setPixelFormat(CameraDevice::PixelFormat format);
   int getPixelFormat(uint32_t &format);
   int setMode(uint32_t mode);
   int getMode();
@@ -68,10 +69,11 @@ private:
   int mMode;
   uint32_t mWidth;
   uint32_t mHeight;
-  uint32_t mPixelFormat;
+  PixelFormat mPixelFormat;
   std::mutex mLock;
   void **mFrmBuf;
   size_t mBufLen;
   uint32_t mBufCnt;
+  char *outBuf;
   std::atomic<int> mState;
 };

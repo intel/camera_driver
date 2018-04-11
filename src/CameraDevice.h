@@ -88,12 +88,14 @@ public:
   };
 
   enum PixelFormat {
-    PIXEL_FORMAT_INVALID = 0,
-    PIXEL_FORMAT_YUV420,
-    PIXEL_FORMAT_YUV422,
-    PIXEL_FORMAT_UYVY,
-    PIXEL_FORMAT_RGB24,
-    PIXEL_FORMAT_RGB32
+    PIXEL_FORMAT_MIN = 0,
+    PIXEL_FORMAT_GREY,    /* 8  bpp monochrome images */
+    PIXEL_FORMAT_YUV420,  /* 12 bpp YUV 4:2:0 */
+    PIXEL_FORMAT_YUV422P, /* 16 bpp YVU422 planar */
+    PIXEL_FORMAT_UYVY,    /* 16 bpp YUV 4:2:2 */
+    PIXEL_FORMAT_RGB24,   /* 24 bpp RGB 8:8:8 */
+    PIXEL_FORMAT_RGB32,   /* 32 bpp RGB 8:8:8:8 */
+    PIXEL_FORMAT_MAX = 99
   };
 
   virtual std::string getDeviceId() = 0;
