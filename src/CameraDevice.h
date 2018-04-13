@@ -99,7 +99,7 @@ public:
   };
 
   virtual std::string getDeviceId() = 0;
-  virtual int getInfo() = 0;
+  virtual int getInfo(CameraInfo &camInfo) = 0;
   virtual std::string getGstSrc() = 0;
   virtual int init() = 0;
   virtual int uninit() = 0;

@@ -62,7 +62,13 @@ CameraDeviceAtomIsp::~CameraDeviceAtomIsp() {
 
 std::string CameraDeviceAtomIsp::getDeviceId() { return mDeviceId; }
 
-int CameraDeviceAtomIsp::getInfo() { return 0; }
+int CameraDeviceAtomIsp::getInfo(CameraInfo &camInfo) {
+  camInfo.name = mDeviceId;
+  camInfo.width = mWidth;
+  camInfo.height = mHeight;
+
+  return 0;
+}
 
 std::string CameraDeviceAtomIsp::getGstSrc() { return {}; }
 
@@ -164,6 +170,7 @@ int CameraDeviceAtomIsp::start() {
 
   setState(STATE_RUN);
 
+  sleep(2);
   return ret;
 }
 

@@ -45,7 +45,7 @@ public:
   CameraDeviceAtomIsp(std::string device);
   ~CameraDeviceAtomIsp();
   std::string getDeviceId();
-  int getInfo();
+  int getInfo(CameraInfo &camInfo);
   std::string getGstSrc();
   int init();
   int uninit();

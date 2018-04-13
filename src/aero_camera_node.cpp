@@ -32,8 +32,8 @@
 *  POSSIBILITY OF SUCH DAMAGE.
 *********************************************************************/
 
-
 #include <algorithm>
+#include <camera_info_manager/camera_info_manager.h>
 #include <image_transport/image_transport.h>
 #include <ros/ros.h>
 #include <sensor_msgs/Image.h>
@@ -44,13 +44,15 @@
 
 class AeroCameraNode {
 public:
-  AeroCameraNode(ros::NodeHandle h);
+  AeroCameraNode(ros::NodeHandle h, ros::NodeHandle hCam);
   ~AeroCameraNode();
   bool spin();
 
 private:
   ros::NodeHandle mNH;
+  ros::NodeHandle mNhCam;
   image_transport::CameraPublisher mImgPub;
+  camera_info_manager::CameraInfoManager mCamInfoMgr;
   sensor_msgs::Image mImgMsg;
   CameraDevice *mCamDev;
   int start();
@@ -59,13 +61,16 @@ private:
   int readData(sensor_msgs::Image &image);
 };
 
-AeroCameraNode::AeroCameraNode(ros::NodeHandle nh) : mNH(nh) {
-
-  // advertise the main image topic
-  image_transport::ImageTransport it(mNH);
-  mImgPub = it.advertiseCamera("image_raw", 1);
+AeroCameraNode::AeroCameraNode(ros::NodeHandle nh, ros::NodeHandle nhCam)
+    : mNH(nh), mNhCam(nhCam), mCamInfoMgr(nhCam) {
 
   ROS_INFO_STREAM("ROS Node aero_camera");
+
+  // advertise the main image topic
+  image_transport::ImageTransport it(mNhCam);
+  mImgPub = it.advertiseCamera("image_raw", 1);
+
+  mImgMsg.header.frame_id = "camera";
 
   mCamDev = new CameraDeviceAtomIsp("/dev/video2");
 }
@@ -101,6 +106,19 @@ int AeroCameraNode::start() {
     return ret;
   }
 
+  // Set camera info
+  CameraInfo camInfo;
+  ret = mCamDev->getInfo(camInfo);
+  if (!ret) {
+    if (!mCamInfoMgr.isCalibrated()) {
+      mCamInfoMgr.setCameraName(camInfo.name);
+      sensor_msgs::CameraInfo camera_info;
+      camera_info.header.frame_id = mImgMsg.header.frame_id;
+      camera_info.width = camInfo.width;
+      camera_info.height = camInfo.height;
+      mCamInfoMgr.setCameraInfo(camera_info);
+    }
+  }
   return ret;
 }
 
@@ -135,19 +153,22 @@ int AeroCameraNode::pubData() {
   // ROS_INFO_STREAM("pubData");
   int ret = 0;
 
-  // read
+  // Get the camera frame
   ret = readData(mImgMsg);
   if (ret) {
     return ret;
   }
 
-  // TODO :: grab the camera info
-  sensor_msgs::CameraInfo ci;
-
   mImgMsg.header.stamp = ros::Time::now();
 
+  // Get the camera info
+  sensor_msgs::CameraInfoPtr ci(
+      new sensor_msgs::CameraInfo(mCamInfoMgr.getCameraInfo()));
+  ci->header.frame_id = mImgMsg.header.frame_id;
+  ci->header.stamp = mImgMsg.header.stamp;
+
   // publish the image
-  mImgPub.publish(mImgMsg, ci);
+  mImgPub.publish(mImgMsg, *ci);
   return ret;
 }
 
@@ -178,7 +199,8 @@ int main(int argc, char **argv) {
 
   // Establish this program as a ROS node.
   ros::NodeHandle nh;
-  AeroCameraNode acn(nh);
+  ros::NodeHandle nhCam("camera");
+  AeroCameraNode acn(nh, nhCam);
   acn.spin();
 
   return 0;
