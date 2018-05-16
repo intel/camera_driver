@@ -13,10 +13,10 @@
 #include "CameraDevice.h"
 #include "CameraDeviceAtomIsp.h"
 
-class AeroCameraNode {
+class CameraDriverNode {
 public:
-  AeroCameraNode(ros::NodeHandle h, ros::NodeHandle hCam);
-  ~AeroCameraNode();
+  CameraDriverNode(ros::NodeHandle h, ros::NodeHandle hCam);
+  ~CameraDriverNode();
   bool spin();
 
 private:
@@ -32,10 +32,10 @@ private:
   int readData(sensor_msgs::Image &image);
 };
 
-AeroCameraNode::AeroCameraNode(ros::NodeHandle nh, ros::NodeHandle nhCam)
+CameraDriverNode::CameraDriverNode(ros::NodeHandle nh, ros::NodeHandle nhCam)
     : mNH(nh), mNhCam(nhCam), mCamInfoMgr(nhCam) {
 
-  ROS_INFO_STREAM("ROS Node aero_camera");
+  ROS_INFO_STREAM("ROS Node camera_driver");
 
   // advertise the main image topic
   image_transport::ImageTransport it(mNhCam);
@@ -46,15 +46,15 @@ AeroCameraNode::AeroCameraNode(ros::NodeHandle nh, ros::NodeHandle nhCam)
   mCamDev = new CameraDeviceAtomIsp("/dev/video2");
 }
 
-AeroCameraNode::~AeroCameraNode() {
-  ROS_INFO_STREAM("~AeroCameraNode");
+CameraDriverNode::~CameraDriverNode() {
+  ROS_INFO_STREAM("~CameraDriverNode");
 
   stop();
 
   delete mCamDev;
 }
 
-int AeroCameraNode::start() {
+int CameraDriverNode::start() {
   ROS_INFO_STREAM("start");
   int ret = 0;
 
@@ -93,7 +93,7 @@ int AeroCameraNode::start() {
   return ret;
 }
 
-int AeroCameraNode::stop() {
+int CameraDriverNode::stop() {
   ROS_INFO_STREAM("stop");
   int ret = 0;
 
@@ -102,7 +102,7 @@ int AeroCameraNode::stop() {
   return ret;
 }
 
-int AeroCameraNode::readData(sensor_msgs::Image &image) {
+int CameraDriverNode::readData(sensor_msgs::Image &image) {
 
   int ret = 0;
   CameraFrame frame;
@@ -120,7 +120,7 @@ int AeroCameraNode::readData(sensor_msgs::Image &image) {
   return ret;
 }
 
-int AeroCameraNode::pubData() {
+int CameraDriverNode::pubData() {
   // ROS_INFO_STREAM("pubData");
   int ret = 0;
 
@@ -143,7 +143,7 @@ int AeroCameraNode::pubData() {
   return ret;
 }
 
-bool AeroCameraNode::spin() {
+bool CameraDriverNode::spin() {
   while (!ros::isShuttingDown())
   {
     if (start() == 0) {
@@ -166,13 +166,13 @@ bool AeroCameraNode::spin() {
 
 int main(int argc, char **argv) {
   // Initialize the ROS system
-  ros::init(argc, argv, "aero_camera");
+  ros::init(argc, argv, "camera_driver");
 
   // Establish this program as a ROS node.
   ros::NodeHandle nh;
   ros::NodeHandle nhCam("camera");
-  AeroCameraNode acn(nh, nhCam);
-  acn.spin();
+  CameraDriverNode cdn(nh, nhCam);
+  cdn.spin();
 
   return 0;
 }
