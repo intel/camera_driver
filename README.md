@@ -1,2 +1,2 @@
-# aero_camera
-ROS driver for Intel Aero Camera
+# camera_driver
+ROS driver for Camera Devices
