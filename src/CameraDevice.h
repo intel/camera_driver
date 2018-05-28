@@ -77,8 +77,10 @@ public:
   virtual int start() = 0;
   virtual int stop() = 0;
   virtual int read(CameraFrame &frame) = 0;
-  virtual int setSize(uint32_t &width, uint32_t &height) { return -ENOTSUP; }
-  virtual int getSize(uint32_t &width, uint32_t &height) { return -ENOTSUP; }
+  virtual int setSize(uint32_t width, uint32_t height) { return -ENOTSUP; }
+  virtual int getSize(uint32_t &width, uint32_t &height) const {
+    return -ENOTSUP;
+  }
   virtual int setPixelFormat(CameraDevice::PixelFormat format) {
     return -ENOTSUP;
   }

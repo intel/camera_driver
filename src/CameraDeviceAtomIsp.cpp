@@ -19,15 +19,16 @@
 
 CameraDeviceAtomIsp::CameraDeviceAtomIsp(std::string device)
     : mDeviceId(device), mWidth(DEFAULT_WIDTH), mHeight(DEFAULT_HEIGHT),
-      mPixelFormat(PIXEL_FORMAT_UYVY), mState(STATE_IDLE),
-      mBufCnt(DEFAULT_BUFFER_COUNT), outBuf(nullptr) {
+      mPixelFormat(PIXEL_FORMAT_UYVY), mOutWidth(mWidth), mOutHeight(mHeight),
+      mOutPixelFormat(mPixelFormat), mState(STATE_IDLE),
+      mBufCnt(DEFAULT_BUFFER_COUNT), mOutBuf(nullptr) {
   log_debug("%s path:%s", __func__, mDeviceId.c_str());
 }
 
 CameraDeviceAtomIsp::~CameraDeviceAtomIsp() {
   stop();
   uninit();
-  free(outBuf);
+  delete mOutBuf;
 }
 
 std::string CameraDeviceAtomIsp::getDeviceId() { return mDeviceId; }
@@ -157,15 +158,6 @@ int CameraDeviceAtomIsp::stop() {
   return 0;
 }
 
-// uyvy to mono8
-static void uyvy2mono8(char *RAW, char *MONO, int NumPixels) {
-  int i;
-
-  for (i = 0; i < NumPixels; i += 1) {
-    MONO[i] = (unsigned char)RAW[2 * i + 1];
-  }
-}
-
 int CameraDeviceAtomIsp::read(CameraFrame &frame) {
   std::lock_guard<std::mutex> locker(mLock);
 
@@ -198,22 +190,39 @@ int CameraDeviceAtomIsp::read(CameraFrame &frame) {
   // TODO :: Check if buffer valid
   // log_debug("Buffer size:%d used:%d", buf.length, buf.bytesused);
 
-  // pass the buffer to caller
-  frame.width = mWidth;
-  frame.height = mHeight;
-  frame.pixFmt = mPixelFormat;
-
-  if (mPixelFormat != PIXEL_FORMAT_UYVY) {
-    if (mPixelFormat == PIXEL_FORMAT_GREY) {
-      if (!outBuf) {
-        outBuf = (char *)malloc(mWidth * mHeight);
+  // Check if there is need to change format or size
+  if ((mOutPixelFormat != mPixelFormat) ||
+      (mWidth != mOutWidth || mHeight != mOutHeight)) {
+    switch (mOutPixelFormat) {
+    case PIXEL_FORMAT_GREY:
+      if (!mOutBuf) {
+        mOutBuf = new uint8_t[(mOutWidth * mOutHeight)];
       }
-      uyvy2mono8((char *)buf.m.userptr, outBuf, mWidth * mHeight);
-      frame.buf = (void *)outBuf;
-      frame.bufSize = mWidth * mHeight;
-      frame.stride = mWidth;
+      frame.stride = mOutWidth;
+      frame.bufSize = mOutWidth * mOutHeight;
+      break;
+    case PIXEL_FORMAT_UYVY:
+      if (!mOutBuf) {
+        mOutBuf = new uint8_t[(2 * mOutWidth * mOutHeight)];
+      }
+      frame.stride = 2 * mOutWidth;
+      frame.bufSize = 2 * mOutWidth * mOutHeight;
+      break;
+    default:
+      break;
     }
+
+    transform((uint8_t *)buf.m.userptr, mOutBuf);
+
+    frame.pixFmt = mOutPixelFormat;
+    frame.width = mOutWidth;
+    frame.height = mOutHeight;
+    frame.buf = mOutBuf;
+
   } else {
+    frame.width = mWidth;
+    frame.height = mHeight;
+    frame.pixFmt = mPixelFormat;
     frame.buf = (void *)buf.m.userptr;
     frame.bufSize = buf.bytesused;
     frame.stride = mWidth * 2;
@@ -275,6 +284,26 @@ int CameraDeviceAtomIsp::setState(int state) {
 
 int CameraDeviceAtomIsp::getState() { return mState; }
 
+void CameraDeviceAtomIsp::uyvy2mono8(const uint8_t *UYVY, uint8_t *MONO,
+                                     int width, int height, int stride) {
+  int i, j;
+  int k = 0;
+  for (j = 0; j < height; j++) {
+    for (i = 0; i < width; i++) {
+      MONO[k++] = UYVY[(j * 2 * stride) + (2 * i) + 1];
+    }
+  }
+}
+
+// Crop and convert pixel format
+// TODO :: Add support for more transormations
+void CameraDeviceAtomIsp::transform(const uint8_t *input, uint8_t *output) {
+  if (mPixelFormat == PIXEL_FORMAT_UYVY &&
+      mOutPixelFormat == PIXEL_FORMAT_GREY) {
+    uyvy2mono8(input, output, mOutWidth, mOutHeight, mWidth);
+  }
+}
+
 int CameraDeviceAtomIsp::allocFrameBuffer(int bufCnt, size_t bufSize) {
   log_debug("%s count:%d", __func__, bufCnt);
 
@@ -324,9 +353,28 @@ int CameraDeviceAtomIsp::freeFrameBuffer() {
   return 0;
 }
 
-int CameraDeviceAtomIsp::getSize(uint32_t &width, uint32_t &height) {
-  width = mWidth;
-  height = mHeight;
+int CameraDeviceAtomIsp::setSize(uint32_t width, uint32_t height) {
+  int ret = 0;
+
+  if (width == 0 || height == 0) {
+    log_error("Invalid Size");
+    return 1;
+  }
+
+  if (getState() == STATE_RUN) {
+    log_debug("Invalid State");
+    return 1;
+  }
+
+  mOutWidth = width;
+  mOutHeight = height;
+
+  return ret;
+}
+
+int CameraDeviceAtomIsp::getSize(uint32_t &width, uint32_t &height) const {
+  width = mOutWidth;
+  height = mOutHeight;
 
   return 0;
 }
@@ -340,10 +388,11 @@ int CameraDeviceAtomIsp::setPixelFormat(CameraDevice::PixelFormat format) {
   }
 
   if (getState() == STATE_RUN) {
-    log_debug("Change will not take effect");
+    log_debug("Invalid State");
+    return 1;
   }
 
-  mPixelFormat = format;
+  mOutPixelFormat = format;
 
   return ret;
 }
