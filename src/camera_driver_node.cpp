@@ -64,6 +64,12 @@ int CameraDriverNode::start() {
     return ret;
   }
 
+  ret = mCamDev->setSize(480, 360);
+  if (ret) {
+    ROS_ERROR("Error in setting resolution");
+    return ret;
+  }
+
   ret = mCamDev->setPixelFormat(CameraDevice::PIXEL_FORMAT_GREY);
   if (ret) {
     ROS_ERROR("Error in setting pixel format");
