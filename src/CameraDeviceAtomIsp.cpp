@@ -141,7 +141,6 @@ int CameraDeviceAtomIsp::start() {
 
   setState(STATE_RUN);
 
-  sleep(2);
   return ret;
 }
 
@@ -186,6 +185,19 @@ int CameraDeviceAtomIsp::read(CameraFrame &frame) {
     log_error("Null buffer returned");
     return -1;
   }
+
+  struct timeval timeofday;
+  gettimeofday(&timeofday, NULL);
+  frame.sec = timeofday.tv_sec;
+  frame.nsec = timeofday.tv_usec * 1000;
+
+// TODO:Use v4l2 buffer timestamp instead for more accuracy
+
+#if DEBUG
+  log_debug("System Timestamp %ld.%06ld", timeofday.tv_sec, timeofday.tv_usec);
+  log_debug("Buffer Timestamp %ld.%06ld", buf.timestamp.tv_sec,
+            buf.timestamp.tv_usec);
+#endif
 
   // TODO :: Check if buffer valid
   // log_debug("Buffer size:%d used:%d", buf.length, buf.bytesused);

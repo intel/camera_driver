@@ -33,6 +33,8 @@ public:
   CameraFrame() {}
   ~CameraFrame() {}
 
+  uint32_t sec;  // system time in sec
+  uint32_t nsec; // system time in nano sec
   uint32_t width;
   uint32_t height;
   uint32_t stride;
