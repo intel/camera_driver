@@ -120,6 +120,8 @@ int CameraDriverNode::readData(sensor_msgs::Image &image) {
                              frame.width, frame.buf);
     else
       ROS_ERROR("Unhandled Pixel Format");
+
+    image.header.stamp = ros::Time(frame.sec, frame.nsec);
   } else
     ROS_ERROR("Error in reading camera frame");
 
@@ -135,8 +137,6 @@ int CameraDriverNode::pubData() {
   if (ret) {
     return ret;
   }
-
-  mImgMsg.header.stamp = ros::Time::now();
 
   // Get the camera info
   sensor_msgs::CameraInfoPtr ci(
