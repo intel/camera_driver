@@ -15,7 +15,7 @@
 
 class CameraDriverNode {
 public:
-  CameraDriverNode(ros::NodeHandle h, ros::NodeHandle hCam);
+  CameraDriverNode(ros::NodeHandle &h, ros::NodeHandle &hCam);
   ~CameraDriverNode();
   bool spin();
 
@@ -32,7 +32,7 @@ private:
   int readData(sensor_msgs::Image &image);
 };
 
-CameraDriverNode::CameraDriverNode(ros::NodeHandle nh, ros::NodeHandle nhCam)
+CameraDriverNode::CameraDriverNode(ros::NodeHandle &nh, ros::NodeHandle &nhCam)
     : mNH(nh), mNhCam(nhCam), mCamInfoMgr(nhCam) {
 
   ROS_INFO_STREAM("ROS Node camera_driver");
