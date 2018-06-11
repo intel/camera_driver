@@ -23,9 +23,9 @@ public:
   CameraInfo() {}
   ~CameraInfo() {}
 
-  std::string name;
-  uint32_t width;
-  uint32_t height;
+  std::string name = "/dev/video0";
+  uint32_t width = 0;
+  uint32_t height = 0;
 };
 
 class CameraFrame {
@@ -33,14 +33,14 @@ public:
   CameraFrame() {}
   ~CameraFrame() {}
 
-  uint32_t sec;  // system time in sec
-  uint32_t nsec; // system time in nano sec
-  uint32_t width;
-  uint32_t height;
-  uint32_t stride;
-  uint32_t pixFmt;
-  void *buf;
-  size_t bufSize;
+  uint32_t sec = 0;  // system time in sec
+  uint32_t nsec = 0; // system time in nano sec
+  uint32_t width = 0;
+  uint32_t height = 0;
+  uint32_t stride = 0;
+  uint32_t pixFmt = 0;
+  void *buf = nullptr;
+  size_t bufSize = 0;
 };
 
 class CameraDevice {

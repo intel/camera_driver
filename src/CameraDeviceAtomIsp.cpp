@@ -18,9 +18,10 @@
 #define DEFAULT_BUFFER_COUNT 4
 
 CameraDeviceAtomIsp::CameraDeviceAtomIsp(std::string device)
-    : mDeviceId(device), mWidth(DEFAULT_WIDTH), mHeight(DEFAULT_HEIGHT),
-      mPixelFormat(PIXEL_FORMAT_UYVY), mOutWidth(mWidth), mOutHeight(mHeight),
-      mOutPixelFormat(mPixelFormat), mState(STATE_IDLE),
+    : mDeviceId(device), mFd(-1), mMode(0), mWidth(DEFAULT_WIDTH),
+      mHeight(DEFAULT_HEIGHT), mPixelFormat(PIXEL_FORMAT_UYVY),
+      mOutWidth(mWidth), mOutHeight(mHeight), mOutPixelFormat(mPixelFormat),
+      mState(STATE_IDLE), mFrmBuf(nullptr), mBufLen(0),
       mBufCnt(DEFAULT_BUFFER_COUNT), mOutBuf(nullptr) {
   log_debug("%s path:%s", __func__, mDeviceId.c_str());
 }
