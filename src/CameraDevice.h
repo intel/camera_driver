@@ -48,6 +48,17 @@ public:
   CameraDevice() {}
   virtual ~CameraDevice() {}
 
+  enum class Status {
+    SUCCESS,
+    ERROR_UNKNOWN,
+    INVALID_ARGUMENT,
+    INVALID_STATE,
+    NO_MEMORY,
+    PERM_DENIED,
+    TIMED_OUT,
+    NOT_SUPPORTED
+  };
+
   enum State {
     STATE_ERROR = -1,
     STATE_IDLE = 0,
@@ -72,23 +83,29 @@ public:
   };
 
   virtual std::string getDeviceId() = 0;
-  virtual int getInfo(CameraInfo &camInfo) = 0;
+  virtual Status getInfo(CameraInfo &camInfo) = 0;
   virtual std::string getGstSrc() = 0;
-  virtual int init() = 0;
-  virtual int uninit() = 0;
-  virtual int start() = 0;
-  virtual int stop() = 0;
-  virtual int read(CameraFrame &frame) = 0;
-  virtual int setSize(uint32_t width, uint32_t height) { return -ENOTSUP; }
-  virtual int getSize(uint32_t &width, uint32_t &height) const {
-    return -ENOTSUP;
+  virtual Status init() = 0;
+  virtual Status uninit() = 0;
+  virtual Status start() = 0;
+  virtual Status stop() = 0;
+  virtual Status read(CameraFrame &frame) = 0;
+  virtual Status setSize(uint32_t width, uint32_t height) {
+    return Status::NOT_SUPPORTED;
   }
-  virtual int setPixelFormat(CameraDevice::PixelFormat format) {
-    return -ENOTSUP;
+  virtual Status getSize(uint32_t &width, uint32_t &height) const {
+    return Status::NOT_SUPPORTED;
   }
-  virtual int getPixelFormat(CameraDevice::PixelFormat &format) {
-    return -ENOTSUP;
+  virtual Status setPixelFormat(CameraDevice::PixelFormat format) {
+    return Status::NOT_SUPPORTED;
   }
-  virtual int setMode(CameraDevice::Mode mode) { return -ENOTSUP; }
-  virtual int getMode(CameraDevice::Mode &mode) { return -ENOTSUP; }
+  virtual Status getPixelFormat(CameraDevice::PixelFormat &format) {
+    return Status::NOT_SUPPORTED;
+  }
+  virtual Status setMode(CameraDevice::Mode mode) {
+    return Status::NOT_SUPPORTED;
+  }
+  virtual Status getMode(CameraDevice::Mode &mode) {
+    return Status::NOT_SUPPORTED;
+  }
 };
