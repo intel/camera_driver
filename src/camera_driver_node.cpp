@@ -107,8 +107,11 @@ int CameraDriverNode::stop() {
   CameraDevice::Status retStatus = CameraDevice::Status::SUCCESS;
 
   retStatus = mCamDev->stop();
-  retStatus = mCamDev->uninit();
+  if (retStatus != CameraDevice::Status::SUCCESS) {
+    ROS_ERROR("Error in stop");
+  }
 
+  retStatus = mCamDev->uninit();
   if (retStatus == CameraDevice::Status::SUCCESS)
     return 0;
   else
