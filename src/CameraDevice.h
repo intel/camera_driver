@@ -131,7 +131,7 @@ public:
    *  @return string Gstreamer src element name, empty if gstreamer not
    * supported
    */
-  virtual std::string getGstSrc() const= 0;
+  virtual std::string getGstSrc() const = 0;
 
   /**
    *  Initialize camera device.
@@ -212,7 +212,7 @@ public:
    *
    *  @return Status of request.
    */
-  virtual Status getPixelFormat(CameraDevice::PixelFormat &format) const{
+  virtual Status getPixelFormat(CameraDevice::PixelFormat &format) const {
     return Status::NOT_SUPPORTED;
   }
 

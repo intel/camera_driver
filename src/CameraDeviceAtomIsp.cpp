@@ -19,10 +19,10 @@
 
 CameraDeviceAtomIsp::CameraDeviceAtomIsp(std::string device)
     : mDeviceId(device), mFd(-1), mMode(VIDEO), mWidth(DEFAULT_WIDTH),
-      mHeight(DEFAULT_HEIGHT), mPixelFormat(UYVY),
-      mOutWidth(mWidth), mOutHeight(mHeight), mOutPixelFormat(mPixelFormat),
-      mState(IDLE), mFrmBuf(nullptr), mBufLen(0),
-      mBufCnt(DEFAULT_BUFFER_COUNT), mOutBuf(nullptr) {
+      mHeight(DEFAULT_HEIGHT), mPixelFormat(UYVY), mOutWidth(mWidth),
+      mOutHeight(mHeight), mOutPixelFormat(mPixelFormat), mState(IDLE),
+      mFrmBuf(nullptr), mBufLen(0), mBufCnt(DEFAULT_BUFFER_COUNT),
+      mOutBuf(nullptr) {
   log_debug("%s path:%s", __func__, mDeviceId.c_str());
 }
 
@@ -309,7 +309,8 @@ CameraDevice::Status CameraDeviceAtomIsp::setMode(CameraDevice::Mode mode) {
   return Status::SUCCESS;
 }
 
-CameraDevice::Status CameraDeviceAtomIsp::getMode(CameraDevice::Mode &mode) const {
+CameraDevice::Status
+CameraDeviceAtomIsp::getMode(CameraDevice::Mode &mode) const {
   mode = mMode;
   return Status::SUCCESS;
 }
@@ -374,8 +375,7 @@ void CameraDeviceAtomIsp::uyvy2mono8(const uint8_t *UYVY, uint8_t *MONO,
 // Crop and convert pixel format
 // TODO :: Add support for more transormations
 void CameraDeviceAtomIsp::transform(const uint8_t *input, uint8_t *output) {
-  if (mPixelFormat == UYVY &&
-      mOutPixelFormat == GREY) {
+  if (mPixelFormat == UYVY && mOutPixelFormat == GREY) {
     uyvy2mono8(input, output, mOutWidth, mOutHeight, mWidth);
   }
 }
