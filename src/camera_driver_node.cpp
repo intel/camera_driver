@@ -15,7 +15,7 @@
 
 class CameraDriverNode {
 public:
-  CameraDriverNode(ros::NodeHandle &h, ros::NodeHandle &hCam);
+  CameraDriverNode();
   ~CameraDriverNode();
   bool spin();
 
@@ -32,8 +32,8 @@ private:
   int readData(sensor_msgs::Image &image);
 };
 
-CameraDriverNode::CameraDriverNode(ros::NodeHandle &nh, ros::NodeHandle &nhCam)
-    : mNH(nh), mNhCam(nhCam), mCamInfoMgr(nhCam) {
+CameraDriverNode::CameraDriverNode()
+    : mNH("~"), mNhCam("camera"), mCamInfoMgr(mNhCam) {
 
   ROS_INFO_STREAM("ROS Node camera_driver");
 
@@ -56,37 +56,37 @@ CameraDriverNode::~CameraDriverNode() {
 
 int CameraDriverNode::start() {
   ROS_INFO_STREAM("start");
-  int ret = 0;
+  CameraDevice::Status retStatus = CameraDevice::Status::SUCCESS;
 
-  ret = mCamDev->init();
-  if (ret) {
+  retStatus = mCamDev->init();
+  if (retStatus != CameraDevice::Status::SUCCESS) {
     ROS_ERROR("Error in init camera");
-    return ret;
+    return -1;
   }
 
-  ret = mCamDev->setSize(480, 360);
-  if (ret) {
+  retStatus = mCamDev->setSize(480, 360);
+  if (retStatus != CameraDevice::Status::SUCCESS) {
     ROS_ERROR("Error in setting resolution");
-    return ret;
+    return -1;
   }
 
-  ret = mCamDev->setPixelFormat(CameraDevice::PIXEL_FORMAT_GREY);
-  if (ret) {
+  retStatus = mCamDev->setPixelFormat(CameraDevice::GREY);
+  if (retStatus != CameraDevice::Status::SUCCESS) {
     ROS_ERROR("Error in setting pixel format");
-    return ret;
+    return -1;
   }
 
-  ret = mCamDev->start();
-  if (ret) {
+  retStatus = mCamDev->start();
+  if (retStatus != CameraDevice::Status::SUCCESS) {
     ROS_ERROR("Error in start camera");
     mCamDev->uninit();
-    return ret;
+    return -1;
   }
 
   // Set camera info
   CameraInfo camInfo;
-  ret = mCamDev->getInfo(camInfo);
-  if (!ret) {
+  retStatus = mCamDev->getInfo(camInfo);
+  if (retStatus == CameraDevice::Status::SUCCESS) {
     if (!mCamInfoMgr.isCalibrated()) {
       mCamInfoMgr.setCameraName(camInfo.name);
       sensor_msgs::CameraInfo camera_info;
@@ -95,37 +95,48 @@ int CameraDriverNode::start() {
       camera_info.height = camInfo.height;
       mCamInfoMgr.setCameraInfo(camera_info);
     }
+
+    return 0;
   }
-  return ret;
+
+  return -1;
 }
 
 int CameraDriverNode::stop() {
   ROS_INFO_STREAM("stop");
-  int ret = 0;
+  CameraDevice::Status retStatus = CameraDevice::Status::SUCCESS;
 
-  ret = mCamDev->stop();
-  ret = mCamDev->uninit();
-  return ret;
+  retStatus = mCamDev->stop();
+  if (retStatus != CameraDevice::Status::SUCCESS) {
+    ROS_ERROR("Error in stop");
+  }
+
+  retStatus = mCamDev->uninit();
+  if (retStatus == CameraDevice::Status::SUCCESS)
+    return 0;
+  else
+    return -1;
 }
 
 int CameraDriverNode::readData(sensor_msgs::Image &image) {
 
-  int ret = 0;
+  CameraDevice::Status retStatus = CameraDevice::Status::SUCCESS;
   CameraFrame frame;
-  ret = mCamDev->read(frame);
-  if (!ret) {
+  retStatus = mCamDev->read(frame);
+  if (retStatus == CameraDevice::Status::SUCCESS) {
     // Form a sensor_msgs::Image with the camera frame
-    if (frame.pixFmt == CameraDevice::PIXEL_FORMAT_GREY)
+    if (frame.pixFmt == CameraDevice::GREY)
       sensor_msgs::fillImage(image, "mono8", frame.height, frame.width,
                              frame.width, frame.buf);
     else
       ROS_ERROR("Unhandled Pixel Format");
 
     image.header.stamp = ros::Time(frame.sec, frame.nsec);
-  } else
+    return 0;
+  } else {
     ROS_ERROR("Error in reading camera frame");
-
-  return ret;
+    return -1;
+  }
 }
 
 int CameraDriverNode::pubData() {
@@ -174,10 +185,7 @@ int main(int argc, char **argv) {
   // Initialize the ROS system
   ros::init(argc, argv, "camera_driver");
 
-  // Establish this program as a ROS node.
-  ros::NodeHandle nh;
-  ros::NodeHandle nhCam("camera");
-  CameraDriverNode cdn(nh, nhCam);
+  CameraDriverNode cdn;
   cdn.spin();
 
   return 0;
