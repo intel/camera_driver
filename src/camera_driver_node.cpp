@@ -70,7 +70,7 @@ int CameraDriverNode::start() {
     return -1;
   }
 
-  retStatus = mCamDev->setPixelFormat(CameraDevice::PIXEL_FORMAT_GREY);
+  retStatus = mCamDev->setPixelFormat(CameraDevice::GREY);
   if (retStatus != CameraDevice::Status::SUCCESS) {
     ROS_ERROR("Error in setting pixel format");
     return -1;
@@ -125,7 +125,7 @@ int CameraDriverNode::readData(sensor_msgs::Image &image) {
   retStatus = mCamDev->read(frame);
   if (retStatus == CameraDevice::Status::SUCCESS) {
     // Form a sensor_msgs::Image with the camera frame
-    if (frame.pixFmt == CameraDevice::PIXEL_FORMAT_GREY)
+    if (frame.pixFmt == CameraDevice::GREY)
       sensor_msgs::fillImage(image, "mono8", frame.height, frame.width,
                              frame.width, frame.buf);
     else

@@ -18,10 +18,10 @@
 #define DEFAULT_BUFFER_COUNT 4
 
 CameraDeviceAtomIsp::CameraDeviceAtomIsp(std::string device)
-    : mDeviceId(device), mFd(-1), mMode(MODE_VIDEO), mWidth(DEFAULT_WIDTH),
-      mHeight(DEFAULT_HEIGHT), mPixelFormat(PIXEL_FORMAT_UYVY),
+    : mDeviceId(device), mFd(-1), mMode(VIDEO), mWidth(DEFAULT_WIDTH),
+      mHeight(DEFAULT_HEIGHT), mPixelFormat(UYVY),
       mOutWidth(mWidth), mOutHeight(mHeight), mOutPixelFormat(mPixelFormat),
-      mState(STATE_IDLE), mFrmBuf(nullptr), mBufLen(0),
+      mState(IDLE), mFrmBuf(nullptr), mBufLen(0),
       mBufCnt(DEFAULT_BUFFER_COUNT), mOutBuf(nullptr) {
   log_debug("%s path:%s", __func__, mDeviceId.c_str());
 }
@@ -32,9 +32,9 @@ CameraDeviceAtomIsp::~CameraDeviceAtomIsp() {
   delete mOutBuf;
 }
 
-std::string CameraDeviceAtomIsp::getDeviceId() { return mDeviceId; }
+std::string CameraDeviceAtomIsp::getDeviceId() const { return mDeviceId; }
 
-CameraDevice::Status CameraDeviceAtomIsp::getInfo(CameraInfo &camInfo) {
+CameraDevice::Status CameraDeviceAtomIsp::getInfo(CameraInfo &camInfo) const {
   camInfo.name = mDeviceId;
   camInfo.width = mWidth;
   camInfo.height = mHeight;
@@ -42,7 +42,7 @@ CameraDevice::Status CameraDeviceAtomIsp::getInfo(CameraInfo &camInfo) {
   return Status::SUCCESS;
 }
 
-std::string CameraDeviceAtomIsp::getGstSrc() { return {}; }
+std::string CameraDeviceAtomIsp::getGstSrc() const { return {}; }
 
 CameraDevice::Status CameraDeviceAtomIsp::init() {
   log_debug("%s", __func__);
@@ -50,7 +50,7 @@ CameraDevice::Status CameraDeviceAtomIsp::init() {
   int ret = -1;
   Status retStatus = Status::ERROR_UNKNOWN;
 
-  if (getState() != STATE_IDLE)
+  if (getState() != IDLE)
     return Status::INVALID_STATE;
 
   // Open Camera device
@@ -87,7 +87,7 @@ CameraDevice::Status CameraDeviceAtomIsp::init() {
   if (ret)
     goto error;
 
-  setState(STATE_INIT);
+  setState(INIT);
   return Status::SUCCESS;
 error:
   v4l2_close(mFd);
@@ -97,7 +97,7 @@ error:
 CameraDevice::Status CameraDeviceAtomIsp::uninit() {
   log_debug("%s", __func__);
 
-  if (getState() == STATE_IDLE)
+  if (getState() == IDLE)
     return Status::SUCCESS;
 
   // Close the Camera Device
@@ -107,7 +107,7 @@ CameraDevice::Status CameraDeviceAtomIsp::uninit() {
   // Free User buffer
   freeFrameBuffer();
 
-  setState(STATE_IDLE);
+  setState(IDLE);
   return Status::SUCCESS;
 }
 
@@ -116,7 +116,7 @@ CameraDevice::Status CameraDeviceAtomIsp::start() {
 
   int ret = 0;
 
-  if (getState() != STATE_INIT)
+  if (getState() != INIT)
     return Status::INVALID_STATE;
 
   // request buffer
@@ -141,7 +141,7 @@ CameraDevice::Status CameraDeviceAtomIsp::start() {
   if (ret)
     return Status::ERROR_UNKNOWN;
 
-  setState(STATE_RUN);
+  setState(RUN);
 
   return Status::SUCCESS;
 }
@@ -149,12 +149,12 @@ CameraDevice::Status CameraDeviceAtomIsp::start() {
 CameraDevice::Status CameraDeviceAtomIsp::stop() {
   log_debug("%s", __func__);
 
-  if (getState() != STATE_RUN)
+  if (getState() != RUN)
     return Status::INVALID_STATE;
 
   v4l2_streamoff(mFd);
 
-  setState(STATE_INIT);
+  setState(INIT);
 
   return Status::SUCCESS;
 }
@@ -164,7 +164,7 @@ CameraDevice::Status CameraDeviceAtomIsp::read(CameraFrame &frame) {
 
   // log_debug("%s", __func__);
 
-  if (getState() != STATE_RUN)
+  if (getState() != RUN)
     return Status::INVALID_STATE;
 
   if (pollCamera(mFd))
@@ -208,14 +208,14 @@ CameraDevice::Status CameraDeviceAtomIsp::read(CameraFrame &frame) {
   if ((mOutPixelFormat != mPixelFormat) ||
       (mWidth != mOutWidth || mHeight != mOutHeight)) {
     switch (mOutPixelFormat) {
-    case PIXEL_FORMAT_GREY:
+    case GREY:
       if (!mOutBuf) {
         mOutBuf = new uint8_t[(mOutWidth * mOutHeight)];
       }
       frame.stride = mOutWidth;
       frame.bufSize = mOutWidth * mOutHeight;
       break;
-    case PIXEL_FORMAT_UYVY:
+    case UYVY:
       if (!mOutBuf) {
         mOutBuf = new uint8_t[(2 * mOutWidth * mOutHeight)];
       }
@@ -260,7 +260,7 @@ CameraDevice::Status CameraDeviceAtomIsp::setSize(uint32_t width,
     return Status::INVALID_ARGUMENT;
   }
 
-  if (getState() == STATE_RUN) {
+  if (getState() == RUN) {
     log_debug("Invalid State");
     return Status::INVALID_STATE;
   }
@@ -282,12 +282,12 @@ CameraDevice::Status CameraDeviceAtomIsp::getSize(uint32_t &width,
 CameraDevice::Status
 CameraDeviceAtomIsp::setPixelFormat(CameraDevice::PixelFormat format) {
 
-  if (format <= PIXEL_FORMAT_MIN || format >= PIXEL_FORMAT_MAX) {
+  if (format <= MIN || format >= MAX) {
     log_error("Invalid Pixel format");
     return Status::INVALID_ARGUMENT;
   }
 
-  if (getState() == STATE_RUN) {
+  if (getState() == RUN) {
     log_debug("Invalid State");
     return Status::INVALID_STATE;
   }
@@ -298,7 +298,7 @@ CameraDeviceAtomIsp::setPixelFormat(CameraDevice::PixelFormat format) {
 }
 
 CameraDevice::Status
-CameraDeviceAtomIsp::getPixelFormat(CameraDevice::PixelFormat &format) {
+CameraDeviceAtomIsp::getPixelFormat(CameraDevice::PixelFormat &format) const {
   format = mPixelFormat;
 
   return Status::SUCCESS;
@@ -309,7 +309,7 @@ CameraDevice::Status CameraDeviceAtomIsp::setMode(CameraDevice::Mode mode) {
   return Status::SUCCESS;
 }
 
-CameraDevice::Status CameraDeviceAtomIsp::getMode(CameraDevice::Mode &mode) {
+CameraDevice::Status CameraDeviceAtomIsp::getMode(CameraDevice::Mode &mode) const {
   mode = mMode;
   return Status::SUCCESS;
 }
@@ -323,25 +323,25 @@ CameraDevice::Status CameraDeviceAtomIsp::setState(State state) {
   if (mState == state)
     return Status::SUCCESS;
 
-  if (state == STATE_ERROR) {
+  if (state == ERROR) {
     mState = state;
     return Status::SUCCESS;
   }
 
   switch (mState) {
-  case STATE_IDLE:
-    if (state == STATE_INIT)
+  case IDLE:
+    if (state == INIT)
       mState = state;
     break;
-  case STATE_INIT:
-    if (state == STATE_IDLE || state == STATE_RUN)
+  case INIT:
+    if (state == IDLE || state == RUN)
       mState = state;
     break;
-  case STATE_RUN:
-    if (state == STATE_INIT)
+  case RUN:
+    if (state == INIT)
       mState = state;
     break;
-  case STATE_ERROR:
+  case ERROR:
     log_error("In Error State");
     // Free up resources, restart?
     break;
@@ -358,7 +358,7 @@ CameraDevice::Status CameraDeviceAtomIsp::setState(State state) {
   ;
 }
 
-CameraDevice::State CameraDeviceAtomIsp::getState() { return mState; }
+CameraDevice::State CameraDeviceAtomIsp::getState() const { return mState; }
 
 void CameraDeviceAtomIsp::uyvy2mono8(const uint8_t *UYVY, uint8_t *MONO,
                                      int width, int height, int stride) {
@@ -374,8 +374,8 @@ void CameraDeviceAtomIsp::uyvy2mono8(const uint8_t *UYVY, uint8_t *MONO,
 // Crop and convert pixel format
 // TODO :: Add support for more transormations
 void CameraDeviceAtomIsp::transform(const uint8_t *input, uint8_t *output) {
-  if (mPixelFormat == PIXEL_FORMAT_UYVY &&
-      mOutPixelFormat == PIXEL_FORMAT_GREY) {
+  if (mPixelFormat == UYVY &&
+      mOutPixelFormat == GREY) {
     uyvy2mono8(input, output, mOutWidth, mOutHeight, mWidth);
   }
 }
@@ -431,7 +431,7 @@ int CameraDeviceAtomIsp::freeFrameBuffer() {
 
 int CameraDeviceAtomIsp::pollCamera(int fd) {
   int ret = -1;
-  while (mState == STATE_RUN) {
+  while (mState == RUN) {
     fd_set fds;
     struct timeval tv;
     int r;

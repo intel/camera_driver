@@ -15,9 +15,9 @@ class CameraDeviceAtomIsp final : public CameraDevice {
 public:
   CameraDeviceAtomIsp(std::string device);
   ~CameraDeviceAtomIsp();
-  std::string getDeviceId();
-  Status getInfo(CameraInfo &camInfo);
-  std::string getGstSrc();
+  std::string getDeviceId() const;
+  Status getInfo(CameraInfo &camInfo) const;
+  std::string getGstSrc() const;
   Status init();
   Status uninit();
   Status start();
@@ -26,9 +26,9 @@ public:
   Status setSize(uint32_t width, uint32_t height);
   Status getSize(uint32_t &width, uint32_t &height) const;
   Status setPixelFormat(CameraDevice::PixelFormat format);
-  Status getPixelFormat(CameraDevice::PixelFormat &format);
+  Status getPixelFormat(CameraDevice::PixelFormat &format) const;
   Status setMode(CameraDevice::Mode mode);
-  Status getMode(CameraDevice::Mode &mode);
+  Status getMode(CameraDevice::Mode &mode) const;
 
 private:
   static void uyvy2mono8(const uint8_t *UYVY, uint8_t *MONO, int width,
@@ -37,7 +37,7 @@ private:
   int allocFrameBuffer(int bufCnt, size_t bufSize);
   int freeFrameBuffer();
   Status setState(State state);
-  State getState();
+  State getState() const;
   int pollCamera(int camFd);
   std::string mDeviceId;
   int mFd;

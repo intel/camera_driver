@@ -35,11 +35,7 @@ public:
  *  The CameraFrame class is used to hold the camera image data and its
  * meta-data.
  */
-class CameraFrame {
-public:
-  CameraFrame() {}
-  ~CameraFrame() {}
-
+struct CameraFrame {
   uint32_t sec = 0;  /**< system time in sec. */
   uint32_t nsec = 0; /**< system time in nano sec. */
   uint32_t width = 0;
@@ -83,32 +79,32 @@ public:
    *  States of the object.
    */
   enum State {
-    STATE_ERROR = -1,
-    STATE_IDLE = 0,
-    STATE_INIT = 1,
-    STATE_RUN = 2,
+    ERROR = -1,
+    IDLE = 0,
+    INIT = 1,
+    RUN = 2,
   };
 
   /**
    *  Modes of camera device.
    */
   enum Mode {
-    MODE_STILL = 0,
-    MODE_VIDEO = 1,
+    STILL = 0,
+    VIDEO = 1,
   };
 
   /**
    *  Pixel formats of the image.
    */
   enum PixelFormat {
-    PIXEL_FORMAT_MIN = 0,
-    PIXEL_FORMAT_GREY,    /* 8  bpp monochrome images */
-    PIXEL_FORMAT_YUV420,  /* 12 bpp YUV 4:2:0 */
-    PIXEL_FORMAT_YUV422P, /* 16 bpp YVU422 planar */
-    PIXEL_FORMAT_UYVY,    /* 16 bpp YUV 4:2:2 */
-    PIXEL_FORMAT_RGB24,   /* 24 bpp RGB 8:8:8 */
-    PIXEL_FORMAT_RGB32,   /* 32 bpp RGB 8:8:8:8 */
-    PIXEL_FORMAT_MAX = 99
+    MIN = 0,
+    GREY,    /* 8  bpp monochrome images */
+    YUV420,  /* 12 bpp YUV 4:2:0 */
+    YUV422P, /* 16 bpp YVU422 planar */
+    UYVY,    /* 16 bpp YUV 4:2:2 */
+    RGB24,   /* 24 bpp RGB 8:8:8 */
+    RGB32,   /* 32 bpp RGB 8:8:8:8 */
+    MAX = 99
   };
 
   /**
@@ -116,7 +112,7 @@ public:
    *
    *  @return string Camera device Id.
    */
-  virtual std::string getDeviceId() = 0;
+  virtual std::string getDeviceId() const = 0;
 
   /**
    *  Get camera device information.
@@ -125,7 +121,7 @@ public:
    *
    *  @return Status of request.
    */
-  virtual Status getInfo(CameraInfo &camInfo) = 0;
+  virtual Status getInfo(CameraInfo &camInfo) const = 0;
 
   /**
    *  Get gstreamer src element supported by the Camera Device
@@ -135,7 +131,7 @@ public:
    *  @return string Gstreamer src element name, empty if gstreamer not
    * supported
    */
-  virtual std::string getGstSrc() = 0;
+  virtual std::string getGstSrc() const= 0;
 
   /**
    *  Initialize camera device.
@@ -216,7 +212,7 @@ public:
    *
    *  @return Status of request.
    */
-  virtual Status getPixelFormat(CameraDevice::PixelFormat &format) {
+  virtual Status getPixelFormat(CameraDevice::PixelFormat &format) const{
     return Status::NOT_SUPPORTED;
   }
 
@@ -238,7 +234,7 @@ public:
    *
    *  @return Status of request.
    */
-  virtual Status getMode(CameraDevice::Mode &mode) {
+  virtual Status getMode(CameraDevice::Mode &mode) const {
     return Status::NOT_SUPPORTED;
   }
 };
