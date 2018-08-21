@@ -8,7 +8,7 @@ ROS driver for Camera Devices
 ## How to Fetch
 ` $ cd ~/catkin_ws/src`
 
-`$ git clone`
+`$ git clone https://github.intel.com/drones/camera_driver.git`
 
 ## How to Build
 `$ cd ~/catkin_ws`
