@@ -12,16 +12,8 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+#include "log.h"
 #include "v4l2_interface.h"
-
-#define log_error(fmt, ...)                                                    \
-  printf("[Error] ");                                                          \
-  printf(fmt, ##__VA_ARGS__);                                                  \
-  printf("\n")
-#define log_debug(fmt, ...)                                                    \
-  printf("[Debug] ");                                                          \
-  printf(fmt, ##__VA_ARGS__);                                                  \
-  printf("\n")
 
 int xioctl(int fd, int request, void *arg) {
   int r;

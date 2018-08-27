@@ -11,6 +11,7 @@
 #include <unistd.h>
 
 #include "CameraDeviceAtomIsp.h"
+#include "log.h"
 #include "v4l2_interface.h"
 
 #define DEFAULT_WIDTH 640
@@ -193,15 +194,13 @@ CameraDevice::Status CameraDeviceAtomIsp::read(CameraFrame &frame) {
   frame.sec = timeofday.tv_sec;
   frame.nsec = timeofday.tv_usec * 1000;
 
-// TODO:Use v4l2 buffer timestamp instead for more accuracy
+  // Use v4l2 buffer timestamp instead for more accuracy
 
-#if DEBUG
   log_debug("System Timestamp %ld.%06ld", timeofday.tv_sec, timeofday.tv_usec);
   log_debug("Buffer Timestamp %ld.%06ld", buf.timestamp.tv_sec,
             buf.timestamp.tv_usec);
-#endif
 
-  // TODO :: Check if buffer valid
+  // Check if buffer valid
   // log_debug("Buffer size:%d used:%d", buf.length, buf.bytesused);
 
   // Check if there is need to change format or size
