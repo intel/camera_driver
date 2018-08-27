@@ -299,7 +299,7 @@ CameraDeviceAtomIsp::setPixelFormat(CameraDevice::PixelFormat format) {
 
 CameraDevice::Status
 CameraDeviceAtomIsp::getPixelFormat(CameraDevice::PixelFormat &format) const {
-  format = mPixelFormat;
+  format = mOutPixelFormat;
 
   return Status::SUCCESS;
 }
