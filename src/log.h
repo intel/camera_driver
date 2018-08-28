@@ -11,11 +11,11 @@
   printf(fmt, ##__VA_ARGS__);                                                  \
   printf("\n")
 
-#if 1
-#define log_debug(fmt, ...)
-#else
+#ifdef DEBUG
 #define log_debug(fmt, ...)                                                    \
   printf("[Debug] ");                                                          \
   printf(fmt, ##__VA_ARGS__);                                                  \
   printf("\n")
+#else
+#define log_debug(fmt, ...)
 #endif
