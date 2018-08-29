@@ -9,15 +9,6 @@
 #include <stdint.h>
 #include <vector>
 
-#define log_error(fmt, ...)                                                    \
-  printf("[Error] ");                                                          \
-  printf(fmt, ##__VA_ARGS__);                                                  \
-  printf("\n")
-#define log_debug(fmt, ...)                                                    \
-  printf("[Debug] ");                                                          \
-  printf(fmt, ##__VA_ARGS__);                                                  \
-  printf("\n")
-
 /**
  *  The CameraInfo class is used to hold the information of the camera device.
  */

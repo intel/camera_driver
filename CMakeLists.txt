@@ -21,6 +21,13 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
+option(DEFINE_DEBUG
+  "Build the project with debug logs enabled"
+  OFF)
+if(DEFINE_DEBUG)
+  add_definitions(-DDEBUG)
+endif()
+
 add_executable(${PROJECT_NAME}_node src/camera_driver_node.cpp src/CameraDeviceAtomIsp.cpp src/v4l2_interface.cpp)
 
 target_link_libraries(${PROJECT_NAME}_node
