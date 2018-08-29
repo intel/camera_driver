@@ -19,4 +19,12 @@ ROS driver for Camera Devices
 `$ rosrun camera_driver camera_driver_node`
 
 ## How to Test
-`$ rostopic list`
+1. Run following command and whether camera ROS topics are listed
+
+   `$ rostopic list`
+
+2. Run following command and check whether all GTests are passed
+
+   `$ catkin run_tests camera_driver`
+   
+   `$ catkin_test_results camera_driver`
