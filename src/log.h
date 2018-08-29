@@ -7,15 +7,15 @@
 #include <cstdio>
 
 #define log_error(fmt, ...)                                                    \
-  printf("[Error] ");                                                          \
-  printf(fmt, ##__VA_ARGS__);                                                  \
-  printf("\n")
+  fprintf(stderr, "[Error] ");                                                 \
+  fprintf(stderr, fmt, ##__VA_ARGS__);                                         \
+  fprintf(stderr, "\n")
 
 #ifdef DEBUG
 #define log_debug(fmt, ...)                                                    \
-  printf("[Debug] ");                                                          \
-  printf(fmt, ##__VA_ARGS__);                                                  \
-  printf("\n")
+  printf(stdout, "[Debug] ");                                                  \
+  printf(stdout, fmt, ##__VA_ARGS__);                                          \
+  printf(stdout, "\n")
 #else
 #define log_debug(fmt, ...)
 #endif
