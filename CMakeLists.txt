@@ -30,6 +30,10 @@ endif()
 
 add_executable(${PROJECT_NAME}_node src/camera_driver_node.cpp src/CameraDeviceAtomIsp.cpp src/v4l2_interface.cpp)
 
+if(CATKIN_ENABLE_TESTING)
+  catkin_add_gtest(utest test/utest.cpp src/CameraDeviceAtomIsp.cpp src/v4l2_interface.cpp)
+  target_link_libraries(utest ${catkin_LIBRARIES})
+endif()
 target_link_libraries(${PROJECT_NAME}_node
   ${catkin_LIBRARIES}
 )
